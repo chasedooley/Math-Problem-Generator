@@ -237,10 +237,13 @@ class Algebraic(Expression):
         # get_nth = lambda : random.choices([random.randint(5, 10), 4, 3, 2], cum_weights=[5, 15, 35, 89])[0]
         pass
 
-class Closeform(Algebraic):
+class Closeform(Expression):
+    """ Trigonometric, logarithmic functions"""
     pass
 
-class Mathematical(Closeform):
+class Mathematical(Expression):
+    """TODO: What is this really? Limit, derivative, and integral functions can all be 
+    generated using the main program as a problem itself; is this for infinite series?"""
     pass
 
 
