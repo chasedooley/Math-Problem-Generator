@@ -76,6 +76,21 @@ class Expression:
             coeffs.append(coeff)
         return coeffs
 
+
+    def get_nthroot(self, root, function=False, expression=None):
+        """ Creates an nth-root expression, of either a coefficient or an expression"""
+        if function:
+            radicand = expression        
+        elif random.randint(0, 2) >= 1 :
+            radicand = expression        
+        else:
+            radicand = self.get_coefficients(0, 1, 10)
+
+        coeff = self.get_coefficients(0, -10, 10)[0] # should return a single coefficient
+        nthroot = str(root) + "-root"
+        term = [coeff, nthroot, '(', radicand, ')']
+        return term
+
 class Polynomial(Expression):
 
     def __init__(self, degree=1, indeterminates='x', lowbound=-10, highbound=10):
@@ -101,7 +116,7 @@ class Polynomial(Expression):
         coeffs = self.get_coefficients(self.degree)
 
         if self.degree == 0:
-            return coeffs[0]
+            self.__expression.append(coeffs)
 
         # a list of all combinations of the interdetermines (minus the empty set)
         indets_subset = []
@@ -168,7 +183,7 @@ class Polynomial(Expression):
 
 class Algebraic(Expression):
     
-    def __init__(self, degree=1, indeterminants='x', lowbound=-10, highbound=10, root=1, rational=True, proper=True, factorial=False):
+    def __init__(self, degree=1, indeterminants='x', lowbound=-10, highbound=10, root=1, rational=True, proper=True):
         super()
         self.degree = degree
         self.indets = indeterminants
@@ -177,65 +192,71 @@ class Algebraic(Expression):
         self.root = root
         self.rational = rational
         self.proper = proper
-        self.factorial = factorial
         self.__expression = []
         """TODO: Consider that all of these variables belong under Expression, including Polynomial's variables"""
         self.new()
 
     def __repr__(self):
         return f"""Algebraic(degree={self.degree}, indeterminants={self.indets}, lowbound={self.lowbound},
-            highbound={self.highbound}, rational={self.rational}, root={self.root}, factorial={self.factorial})"""
+            highbound={self.highbound}, rational={self.rational}, root={self.root})"""
 
     def __call__(self):
         return self.__expression
 
     def new(self):
         """Creates an algebraic expression using the set attributes"""
-        
-        def get_nthroot(root, function=False, less_degree=None):
-            """TODO: Consider get_nthroot as a function of Expression class, along with 'get_trigfunction'"""
-            if function:
-                radicand = Polynomial(degree=less_degree, indeterminates=self.indets, 
-                        lowbound=self.lowbound, highbound=self.highbound)
-            else:
-                radicand = self.get_coefficients(0, 1, 10)
-
-            coeff = self.get_coefficients(0, -10, 10) # should return a single coefficient
-            nthroot = str(root) + "-root"
-            term = [coeff, nthroot, '(', radicand, ')']
-            return term
+        self.__expression = []
+        less_degree = lambda : random.randint(0, self.degree-1) if self.degree > 1 else 0
 
         # if self.rational is true, then the expression is a rational function
         # if self.proper is true, then it's a proper rational function; P(x)/Q(x) where P(x) < Q(x)
         if self.rational and self.proper:
-            
-            lesser_degr = random.randint(0, self.degree-1) if self.degree > 1 else 0
 
+            Q_funct = Polynomial(degree=self.degree, indeterminates=self.indets, 
+                            lowbound=self.lowbound, highbound=self.highbound)
+        
             # if root is greater than one, an nth-root will replace P_funct; it could be a value or Polynomial
             if self.root > 1:
-                P_funct = get_nthroot(self.root, function=True, less_degree=lesser_degr)
-
-                """TODO: with this, P_funct will always be a nth-root polynomial; there's no option for mixed, polynomial and nthroot terms, so add it"""
-
-            else:
-                P_funct = Polynomial(degree=lesser_degr, indeterminates=self.indets, 
+                expr = Polynomial(degree=self.degree, indeterminates=self.indets, 
                             lowbound=self.lowbound, highbound=self.highbound)
-            Q_funct = Polynomial(degree=self.degree, indeterminates=self.indets, 
-                        lowbound=self.lowbound, highbound=self.highbound)
-            self.__expression = [P_funct, "/", Q_funct()]
-        
+
+                P_funct = self.get_nthroot(self.root, expression = expr())
+                self.__expression = [P_funct, "/", Q_funct()]
+            else:  
+                P_funct = Polynomial(degree=less_degree(), indeterminates=self.indets, 
+                                lowbound=self.lowbound, highbound=self.highbound)
+                self.__expression = [P_funct(), "/", Q_funct()]
+
         # if self.proper is false, then it's an improper rational function; Q(x)/P(x) where P(x) < Q(x)
         elif self.rational and not self.proper:
-            self.__expression = [Q_funct(), "/", P_funct()]
-        else:
-                    # if root is greater than one, an nth-root will be appended to one of the functions or both
+
+            Q_funct = Polynomial(degree=self.degree, indeterminates=self.indets, 
+                lowbound=self.lowbound, highbound=self.highbound)
+            
+            # if root is greater than one, an nth-root will replace P_funct; it could be a value or Polynomial
             if self.root > 1:
-                nthroot = get_nthroot(self.root)
-                """TODO: Finish the condition tree"""
-        
+                expr = Polynomial(degree=self.degree, indeterminates=self.indets, 
+                            lowbound=self.lowbound, highbound=self.highbound)
+                P_funct = self.get_nthroot(self.root, expression=expr())
+                self.__expression = [Q_funct(), "/", P_funct]
+            else:  
+                P_funct = Polynomial(degree=less_degree(), indeterminates=self.indets, 
+                                lowbound=self.lowbound, highbound=self.highbound)
+                self.__expression = [Q_funct(), "/", P_funct()]
+
+        else:
+            # if root is greater than one, an nth-root will replace P_funct; it could be a value or Polynomial
+            Q_funct = Polynomial(degree=self.degree, indeterminates=self.indets, 
+                lowbound=self.lowbound, highbound=self.highbound)
+            
+            self.__expression = self.get_nthroot(self.root, function=True, expression=Q_funct())
+
     def random(self):
-        # get_nth = lambda : random.choices([random.randint(5, 10), 4, 3, 2], cum_weights=[5, 15, 35, 89])[0]
-        pass
+        """Generates a random expression using random attributes"""
+        self.degree = random.randint(1, 5)
+        self.root = random.choices([random.randint(5, 10), 4, 3, 2], cum_weights=[5, 15, 35, 89])[0]
+        self.indets = random.choice(['x', 'xy', 'xyz', 'wxyz'])
+        self.new()
 
 class Closeform(Expression):
     """ Trigonometric, logarithmic functions"""
@@ -248,4 +269,5 @@ class Mathematical(Expression):
 
 
 exp = Algebraic()
-print(repr(exp))
+exp.random()
+print(exp())
