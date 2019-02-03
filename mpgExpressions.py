@@ -88,8 +88,78 @@ class Expression:
 
         coeff = self.get_coefficients(0, -10, 10)[0] # should return a single coefficient
         nthroot = str(root) + "-root"
-        term = [coeff, nthroot, '(', radicand, ')']
-        return term
+        [coeff, nthroot, '(', radicand, ')']
+        return [coeff, nthroot, '(', radicand, ')']
+
+    def get_trigfunct(self, indeterminant=None, degree=1, inverse=False, hyperbolic=False, function=False, expression=None):
+        """ Creates a trigonometric function, including inverse and hyperbolic forms, and can
+            use an expression"""
+        # Collections of the trigonometric and hyperbolic functions, and their inverses (arc-)
+        trigs = ["sin", "cos", "tan", "csc", "cot", "sec"]
+        arctrigs = ["arcsin", "arccos", "arctan", "arccsc", "arccot", "arcsec"]
+        hypers = ["sinh", "cosh", "tanh", "csch", "coth", "sech"]
+        archypers = ["arcsinh" "arccosh", "arctanh", "arccsch", "arccoth", "arcsech"]
+
+        # A lambda function for getting a random function from a list above
+        get_funct = lambda lst : lst[random.randrange(0, len(lst))]
+
+        # Determining which list to pull from
+        if inverse:
+            if hyperbolic:
+                funct = get_funct(archypers)
+            else:
+                funct = get_funct(arctrigs)
+        else:
+            if hyperbolic:
+                funct = get_funct(hypers)
+            else:
+                funct = get_funct(trigs)
+
+        # Determining what will go inside the function
+        if function:
+            inside = expression
+        elif indeterminant is not None:
+            inside = indeterminant
+        else:
+            inside = random.randrange(0, 10)
+
+        coeff = self.get_coefficients(0, -10, 10)[0]
+
+        return [coeff, funct, "**", degree, "(", inside, ")"]
+
+    def get_log(self, indeterminant=None, base=None, function=False, expression=None):
+        """ Returns an logarithm, either natural or with a base, of some value or expression"""
+
+        # Determines the inside of the function
+        if function:
+            inside = expression
+        elif indeterminant is not None:
+            inside = indeterminant
+        else:
+            inside = random.randrange(0, 10)
+
+        # Defaults to base e, the natural logarithm (ln)
+        if base is not None:
+            log = "log-" + str(base)
+        else:
+            log = "ln"
+        
+        coeff = self.get_coefficients(0, -10, 10)[0]
+        return [coeff, log, '(', inside, ')']
+
+    def get_expon(self, indeterminant=None, function=False, expression=None):
+        """ Returns an exponential function (e times something)"""
+        
+        # Determines the exponent
+        if function:
+            exponent = expression
+        elif indeterminant is not None:
+            exponent = indeterminant
+        else:
+            exponent = random.randrange(0, 10)
+        
+        coeff = self.get_coefficients(0, -10, 10)[0]
+        return [coeff, 'e**', exponent]
 
 class Polynomial(Expression):
 
@@ -193,7 +263,7 @@ class Algebraic(Expression):
         self.rational = rational
         self.proper = proper
         self.__expression = []
-        """TODO: Consider that all of these variables belong under Expression, including Polynomial's variables"""
+        
         self.new()
 
     def __repr__(self):
@@ -259,8 +329,41 @@ class Algebraic(Expression):
         self.new()
 
 class Closeform(Expression):
-    """ Trigonometric, logarithmic functions"""
-    pass
+    
+    def __init__(self, degree=1, indeterminants='x', lowbound=-10, highbound=10, trig=True, log=False, expo=False, algebraic=False):
+        self.degree = degree
+        self.indets = indeterminants
+        self.lowbound = lowbound
+        self.highbound = highbound
+        self.trig = trig # include trig function?
+        self.log = log # include logarithm?
+        self.expo = expo # include exponential?
+        self.__expression = []
+        
+        # Determines if the closeform expression will be an algebraic form or polynomial
+        if algebraic is not None:
+            self.algebraic = algebraic
+            self.albool = True
+            self.root = algebraic[0]
+            self.rational = algebraic[1]
+            self.proper = algebraic[2]
+        else:
+            self.algebraic = algebraic
+
+        self.new()
+
+    def __repr__(self):
+        return f"""Closeform(degree={self.degree}, indeterminants={self.indets}, lowbound={self.lowbound},
+            highbound={self.highbound}, trig={self.trig}, log={self.log}, expo={self.expo}, algebraic={self.algebraic})"""
+             
+    def __call__(self):
+        return self.__expression
+
+    def new(self):
+        pass
+    
+    def random(self):
+        pass
 
 class Mathematical(Expression):
     """TODO: What is this really? Limit, derivative, and integral functions can all be 
