@@ -163,10 +163,10 @@ class Expression:
 
 class Polynomial(Expression):
 
-    def __init__(self, degree=1, indeterminates='x', lowbound=-10, highbound=10):
+    def __init__(self, degree=1, indeterminants='x', lowbound=-10, highbound=10):
         super()
         self.degree = degree
-        self.indets = indeterminates
+        self.indets = indeterminants
         self.lowbound = lowbound
         self.highbound = highbound
         self.__expression = []
@@ -282,41 +282,41 @@ class Algebraic(Expression):
         # if self.proper is true, then it's a proper rational function; P(x)/Q(x) where P(x) < Q(x)
         if self.rational and self.proper:
 
-            Q_funct = Polynomial(degree=self.degree, indeterminates=self.indets, 
+            Q_funct = Polynomial(degree=self.degree, indeterminants=self.indets, 
                             lowbound=self.lowbound, highbound=self.highbound)
         
             # if root is greater than one, an nth-root will replace P_funct; it could be a value or Polynomial
             if self.root > 1:
-                expr = Polynomial(degree=self.degree, indeterminates=self.indets, 
+                expr = Polynomial(degree=self.degree, indeterminants=self.indets, 
                             lowbound=self.lowbound, highbound=self.highbound)
 
                 P_funct = self.get_nthroot(self.root, expression = expr())
                 self.__expression = [P_funct, "/", Q_funct()]
             else:  
-                P_funct = Polynomial(degree=less_degree(), indeterminates=self.indets, 
+                P_funct = Polynomial(degree=less_degree(), indeterminants=self.indets, 
                                 lowbound=self.lowbound, highbound=self.highbound)
                 self.__expression = [P_funct(), "/", Q_funct()]
 
         # if self.proper is false, then it's an improper rational function; Q(x)/P(x) where P(x) < Q(x)
         elif self.rational and not self.proper:
 
-            Q_funct = Polynomial(degree=self.degree, indeterminates=self.indets, 
+            Q_funct = Polynomial(degree=self.degree, indeterminants=self.indets, 
                 lowbound=self.lowbound, highbound=self.highbound)
             
             # if root is greater than one, an nth-root will replace P_funct; it could be a value or Polynomial
             if self.root > 1:
-                expr = Polynomial(degree=self.degree, indeterminates=self.indets, 
+                expr = Polynomial(degree=self.degree, indeterminants=self.indets, 
                             lowbound=self.lowbound, highbound=self.highbound)
                 P_funct = self.get_nthroot(self.root, expression=expr())
                 self.__expression = [Q_funct(), "/", P_funct]
             else:  
-                P_funct = Polynomial(degree=less_degree(), indeterminates=self.indets, 
+                P_funct = Polynomial(degree=less_degree(), indeterminants=self.indets, 
                                 lowbound=self.lowbound, highbound=self.highbound)
                 self.__expression = [Q_funct(), "/", P_funct()]
 
         else:
             # if root is greater than one, an nth-root will replace P_funct; it could be a value or Polynomial
-            Q_funct = Polynomial(degree=self.degree, indeterminates=self.indets, 
+            Q_funct = Polynomial(degree=self.degree, indeterminants=self.indets, 
                 lowbound=self.lowbound, highbound=self.highbound)
             
             self.__expression = self.get_nthroot(self.root, function=True, expression=Q_funct())
@@ -341,14 +341,14 @@ class Closeform(Expression):
         self.__expression = []
         
         # Determines if the closeform expression will be an algebraic form or polynomial
-        if algebraic is not None:
+        if algebraic is not False:
             self.algebraic = algebraic
             self.albool = True
             self.root = algebraic[0]
             self.rational = algebraic[1]
             self.proper = algebraic[2]
         else:
-            self.algebraic = algebraic
+            self.albool = algebraic
 
         self.new()
 
@@ -360,17 +360,85 @@ class Closeform(Expression):
         return self.__expression
 
     def new(self):
-        pass
-    
+        """ Creates a closed-form expression consisting of trigonometric, logarithmic or exponential functions"""
+        
+        # For determining how the close-form expressions will be appended to the algebraic or polynomial expressions
+        # multiply, divide
+        cf_term = []
+        op = random.randint(0, 3)
+        if op == 0:
+            cf_term.append('*')
+        elif op == 1:
+            cf_term.append('/')
+
+        # Determines which closeform functions will be included; if all attributes are False, then it defaults to a trig function regardless
+        if self.trig:
+            if self.log:
+                if self.expo:
+                    trig = self.get_trigfunct(indeterminant=self.indets[0])
+                    log = self.get_log(indeterminant=self.indets[0])
+                    expo = self.get_expon(indeterminant=self.indets[0])
+                    cf_term.extend([trig, log, expo])
+                else:
+                    trig = self.get_trigfunct(indeterminant=self.indets[0])
+                    log = self.get_log(indeterminant=self.indets[0])
+                    cf_term.extend([trig, log])
+
+            else:
+                if self.expo:
+                    expo = self.get_expon(indeterminant=self.indets[0])
+                    trig = self.get_trigfunct(indeterminant=self.indets[0])
+                    cf_term.extend([trig, expo])
+                else:
+                    trig = self.get_trigfunct(indeterminant=self.indets[0])
+                    cf_term.extend(trig)
+        else:
+            if self.log:
+                if self.expo:
+                    log = self.get_log(indeterminant=self.indets[0])
+                    expo = self.get_expon(indeterminant=self.indets[0])
+                    cf_term.extend([log, expo])
+                else:
+                    log = self.get_log(indeterminant=self.indets[0])
+                    cf_term.extend(log)
+            else:
+                if self.expo:
+                    expo = self.get_expon(indeterminant=self.indets[0])
+                    cf_term.extend(expo)
+                else:
+                    trig = self.get_trigfunct(indeterminant=self.indets[0])
+                    cf_term.extend(trig)
+
+        if self.albool:
+            expr = Algebraic(degree=self.degree, indeterminants=self.indets, 
+                        lowbound=self.lowbound, highbound=self.highbound, root=self.root, rational=self.rational, proper=self.proper)            
+            self.__expression = expr()
+        else:
+            expr = Polynomial(degree=self.degree, indeterminants=self.indets, 
+                        lowbound=self.lowbound, highbound=self.highbound)
+            self.__expression = expr()
+
+        self.__expression.append(cf_term)
+
     def random(self):
-        pass
+        """Generates a random expression using random attributes"""
+        self.degree = random.randint(1, 5)
+        self.indets = random.choice(['x', 'xy', 'xyz', 'wxyz'])
+        self.trig = random.choice([True, False])
+        self.log = random.choice([True, False])
+        self.expo = random.choice([True, False])
+        self.albool = random.choice([True, False])
+        if self.albool:
+            self.root = random.choices([random.randint(5, 10), 4, 3, 2], cum_weights=[5, 15, 35, 89])[0]
+            self.rational = random.choice([True, False])
+            self.proper = random.choice([True, False])
+        self.new()
 
 class Mathematical(Expression):
     """TODO: What is this really? Limit, derivative, and integral functions can all be 
     generated using the main program as a problem itself; is this for infinite series?"""
     pass
 
-
-exp = Algebraic()
+exp = Closeform()
 exp.random()
 print(exp())
