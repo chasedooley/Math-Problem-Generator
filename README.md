@@ -5,13 +5,11 @@ Written in Python 3.7.2
 
 ## Next Additions:
 
-1. Finish support for other expressions, including closeform (trigonometric, logarithmic) and mathematical (deriviatives, integration).
+1. Complete main program
 
-2. Complete main program
+2. Build translation to Latex, MathJax
 
-3. Build translation to Latex, MathJax
-
-4. Consider support for solutions
+3. Consider support for solutions
 
 ## What I've Learned
 
