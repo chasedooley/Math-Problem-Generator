@@ -7,9 +7,7 @@ Written in Python 3.7.2
 
 1. Complete main program
 
-2. Build translation to Latex, MathJax
-
-3. Consider support for solutions
+2. Build an API or build-in a web-based app
 
 ## What I've Learned
 
